@@ -26,4 +26,4 @@ if __name__ == '__main__':
 		currentPath = sysPath
 	elif os.path.isfile(sysPath):
 		currentPath = os.path.dirname(sysPath)
-	randomValueGenerator.writeToCSV(outputFilePath = '%s%s%s' % (currentPath, os.sep, r'\randomData.csv'), startTime = datetime.datetime(2015,1,1,0,0,0,0), timeDelta = datetime.timedelta(minutes = 1))
+	randomValueGenerator.writeToCSV(outputFilePath = '%s%s%s' % (currentPath, os.sep, r'\randomData.csv'), startTime = datetime.datetime(2015,1,1,0,0,0,0), timeDelta = datetime.timedelta(minutes = 1), baseValue = 70, valueRange = 5)
