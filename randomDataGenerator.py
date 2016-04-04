@@ -1,4 +1,4 @@
-import datetime,random
+import datetime, random, sys, os
 
 class randomValueGenerator:
 	@staticmethod
@@ -20,4 +20,10 @@ class randomValueGenerator:
 		outputFile.close()
 
 if __name__ == '__main__':
-	randomValueGenerator.writeToCSV(outputFilePath = r'c:\code\randomData.csv', startTime = datetime.datetime(2015,1,1,0,0,0,0), timeDelta = datetime.timedelta(minutes = 1))
+	currentPath = ''
+	sysPath = sys.path[0]
+	if os.path.isdir(sysPath):
+		currentPath = sysPath
+	elif os.path.isfile(sysPath):
+		currentPath = os.path.dirname(sysPath)
+	randomValueGenerator.writeToCSV(outputFilePath = '%s%s%s' % (currentPath, os.sep, r'\randomData.csv'), startTime = datetime.datetime(2015,1,1,0,0,0,0), timeDelta = datetime.timedelta(minutes = 1))
