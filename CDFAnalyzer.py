@@ -1,4 +1,4 @@
-import math, numpy as np, copy, os, sys
+import math, numpy as np, copy, os, sys, matplotlib.pyplot as plt
 
 class CDF:
     __private_data = []
@@ -22,6 +22,43 @@ class CDF:
 
     def getSTD(self):
         return self.__private_std
+
+    def getCNDCurve(self, groups, sorting = 'ASC', n = 64):
+        #Arguments validation
+        sorting = sorting.upper()
+        if sorting not in ('ASC', 'DESC'):
+            raise ValueError, "Parameter 'sorting' can only be either 'ASC' or 'DESC'"
+        if not str(groups).isdigit():
+            raise ValueError, "Parameter 'groups' can only be digit number"
+        if not str(n).isdigit():
+            raise ValueError, "Parameter 'n' can only be digit number"
+
+        #result lists
+        xList = []
+        yList = []
+
+        #Sort the data
+        dataList = copy.copy(self.__private_data)
+        dataList.sort()
+        if sorting == 'DESC':
+            dataList.reverse()
+
+        #Generate Groups
+        first_value = dataList[0]
+        last_value = dataList[self.__private_dataCount - 1]
+        groups_array = np.linspace(first_value, last_value, groups)
+
+        y = 0.0
+        for value in groups_array:
+            erf = (value - self.__private_mean) / (self.__private_std * math.sqrt(2))
+            for i in range(0, n):
+                y += math.pow(-1, i) * math.pow(erf, 2 * i + 1) / ((2 * i + 1) * (1 if i == 0 else math.factorial(i)))
+            y = y / math.sqrt(math.pi) + 0.5
+            xList.append(value)
+            yList.append(y)
+            y = 0.0
+
+        return (xList, yList)
 
     def getCDData(self, groups, sorting = 'ASC'):
         #Argument validation
@@ -61,18 +98,17 @@ class CDF:
         return (xList, yList)
 
 if __name__ == '__main__':
+    #Generate random data for analysis
     sampleData = list(np.random.normal(10.0, 1, 1000))
     cdf = CDF(sampleData)
     print 'Data Count: %s\nMean: %s\nStandard Deviation: %s' % (cdf.getDataCount(), cdf.getMean(), cdf.getSTD())
-    resultData = cdf.getCDData(groups = 100, sorting = 'desc')
-    currentPath = ''
-    sysPath = sys.path[0]
-    if os.path.isdir(sysPath):
-        currentPath = sysPath
-    elif os.path.isfile(sysPath):
-        currentPath = os.path.dirname(sysPath)
-    dataOutputFile = open('%s%s%s' % (currentPath, os.sep, r'\randomData.csv'), 'w')
-    for i in range(0, len(resultData[0])):
-        dataOutputFile.write('%s,%s\n' % (resultData[0][i],resultData[1][i]))
-
-    dataOutputFile.close()
+    
+    resultData = cdf.getCDData(groups = 100, sorting = 'asc')
+    cndCurveData = cdf.getCNDCurve(groups = 100, sorting = 'asc', n = 64)
+    
+    plt.scatter(resultData[0], resultData[1], color = 'red', alpha = 0.3, label = 'Cumulative Distribution')
+    plt.plot(cndCurveData[0], cndCurveData[1], color = 'blue')
+    plt.xlabal = 'Value'
+    plt.ylabal = 'Probability'
+    plt.grid(True)
+    plt.show()
