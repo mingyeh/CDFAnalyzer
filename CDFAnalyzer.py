@@ -22,12 +22,45 @@ class CDF:
 
     def getSTD(self):
         return self.__private_std
-
-    def getCNDCurve(self, groups, sorting = 'ASC', n = 64):
+    
+    def getLogCNDCurve(self, groups, n = 64):
         #Arguments validation
-        sorting = sorting.upper()
-        if sorting not in ('ASC', 'DESC'):
-            raise ValueError, "Parameter 'sorting' can only be either 'ASC' or 'DESC'"
+        if not str(groups).isdigit():
+            raise ValueError, "Parameter 'groups' can only be digit number"
+        if not str(n).isdigit():
+            raise ValueError, "Parameter 'n' can only be digit number"
+
+        #result lists
+        xList = []
+        yList = []
+
+        #Sort the data
+        dataList = copy.copy(self.__private_data)
+        for i in range(0, self.__private_dataCount):
+            dataList[i] = math.log(dataList[i])
+        dataList.sort()
+        log_mean = np.mean(dataList)
+        log_std = np.std(dataList)
+
+        #Generate Groups
+        first_value = dataList[0]
+        last_value = dataList[self.__private_dataCount - 1]
+        groups_array = np.linspace(first_value, last_value, groups)
+
+        y = 0.0
+        for value in groups_array:
+            erf = (value - log_mean) / (log_std * math.sqrt(2))
+            for i in range(0, n):
+                y += math.pow(-1, i) * math.pow(erf, 2 * i + 1) / ((2 * i + 1) * (1 if i == 0 else math.factorial(i)))
+            y = y / math.sqrt(math.pi) + 0.5
+            xList.append(math.exp(value))
+            yList.append(y)
+            y = 0.0
+
+        return (xList, yList)
+
+    def getCNDCurve(self, groups, n = 64):
+        #Arguments validation
         if not str(groups).isdigit():
             raise ValueError, "Parameter 'groups' can only be digit number"
         if not str(n).isdigit():
@@ -40,8 +73,6 @@ class CDF:
         #Sort the data
         dataList = copy.copy(self.__private_data)
         dataList.sort()
-        if sorting == 'DESC':
-            dataList.reverse()
 
         #Generate Groups
         first_value = dataList[0]
@@ -60,11 +91,8 @@ class CDF:
 
         return (xList, yList)
 
-    def getCDData(self, groups, sorting = 'ASC'):
+    def getCDData(self, groups):
         #Argument validation
-        sorting = sorting.upper()
-        if sorting not in ('ASC','DESC'):
-            raise ValueError,"Parameter 'sorting' can only be either 'ASC' or 'DESC'"
         if not str(groups).isdigit():
             raise ValueError, "Parameter 'groups' can only be digit number"
 
@@ -75,8 +103,6 @@ class CDF:
         #Sort the data
         dataList = copy.copy(self.__private_data)
         dataList.sort()
-        if sorting == 'DESC':
-            dataList.reverse()
 
         #Generate groups
         first_value = dataList[0]
@@ -87,7 +113,7 @@ class CDF:
         group_first = 0
         for value in groups_array:
             for i in range(group_first, self.__private_dataCount):
-                if (sorting == 'ASC' and dataList[i] > value) or (sorting == 'DESC' and dataList[i] < value):
+                if dataList[i] > value:
                     group_first = i
                     xList.append(value) 
                     yList.append(i * 1.0 / self.__private_dataCount)
@@ -99,15 +125,17 @@ class CDF:
 
 if __name__ == '__main__':
     #Generate random data for analysis
-    sampleData = list(np.random.normal(10.0, 1, 1000))
+    sampleData = list(np.random.normal(10.0, 1.0, 1000))
     cdf = CDF(sampleData)
     print 'Data Count: %s\nMean: %s\nStandard Deviation: %s' % (cdf.getDataCount(), cdf.getMean(), cdf.getSTD())
     
-    resultData = cdf.getCDData(groups = 100, sorting = 'asc')
-    cndCurveData = cdf.getCNDCurve(groups = 100, sorting = 'asc', n = 64)
-    
+    resultData = cdf.getCDData(groups = 100)
+    cndCurveData = cdf.getCNDCurve(groups = 100, n = 64)
+    logCNDCurveData = cdf.getLogCNDCurve(groups = 100, n = 64)
+
     plt.scatter(resultData[0], resultData[1], color = 'red', alpha = 0.3, label = 'Cumulative Distribution')
     plt.plot(cndCurveData[0], cndCurveData[1], color = 'blue')
+    plt.plot(logCNDCurveData[0], logCNDCurveData[1], color = 'green')
     plt.xlabal = 'Value'
     plt.ylabal = 'Probability'
     plt.grid(True)
