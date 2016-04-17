@@ -132,11 +132,16 @@ if __name__ == '__main__':
     resultData = cdf.getCDData(groups = 100)
     cndCurveData = cdf.getCNDCurve(groups = 100, n = 64)
     logCNDCurveData = cdf.getLogCNDCurve(groups = 100, n = 64)
-
+   
+    #Setup axis of the chart
+    axis_list = [7.0, 13.0, 0.0, 1.0]
+    plt.axis(axis_list)
     plt.scatter(resultData[0], resultData[1], color = 'red', alpha = 0.3, label = 'Cumulative Distribution')
-    plt.plot(cndCurveData[0], cndCurveData[1], color = 'blue')
-    plt.plot(logCNDCurveData[0], logCNDCurveData[1], color = 'green')
-    plt.xlabal = 'Value'
-    plt.ylabal = 'Probability'
+    plt.plot(cndCurveData[0], cndCurveData[1], color = 'blue', label = 'Cumulative Normal Distribution')
+    plt.plot(logCNDCurveData[0], logCNDCurveData[1], color = 'green', label = 'Log Cumulative Normal Distribution')
     plt.grid(True)
+    #Add legend box
+    plt.legend(loc = 'upper left', ncol = 1, borderaxespad = 0, fontsize = 12)
+    #Add title
+    plt.title('Cumulative Distribution Analysis', fontsize = 16)
     plt.show()
